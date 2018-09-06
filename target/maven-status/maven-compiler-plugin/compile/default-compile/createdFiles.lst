@@ -1,0 +1,6 @@
+com/ussd/entity/Request.class
+com/ussd/service/RequestFacadeREST.class
+com/ussd/model/UssdResponse.class
+com/ussd/service/AbstractFacade.class
+com/ussd/entity/Request_.class
+com/ussd/service/ApplicationConfig.class
