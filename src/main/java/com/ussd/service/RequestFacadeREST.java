@@ -12,6 +12,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -63,9 +64,9 @@ public class RequestFacadeREST extends AbstractFacade<Request> {
     public String ussdHandler(
             @QueryParam(value = "sessionId") String sessionId,
             @QueryParam(value = "phoneNumber") String phoneNumber,
-            @QueryParam(value = "input") String input
+           @QueryParam(value = "input") @DefaultValue(" ")  String input
     ) {
-
+        String output = null;
         String[] rawStringArray = input.split("\\*");
         int rawLevel = rawStringArray.length;
         String lastInput = rawStringArray[rawLevel - 1];
@@ -78,15 +79,47 @@ public class RequestFacadeREST extends AbstractFacade<Request> {
                 em.persist(new Request(sessionId, input, phoneNumber));
             } else {
                 String dbInput = request.getInput();
-                if (input != "") {
+                if (!input.trim().equals("")) {
                     request.setInput(dbInput + lastInput + "*");
                 }
             }
         } else {
-
+            String inputString = "";
+            Request request = em.find(Request.class, sessionId);
+            String[] dbStringArray = request.getInput().split("\\*");
+            int dbLevel = dbStringArray.length;
+            for (int x = 0; x < dbLevel - 1; x++) {
+                inputString = inputString + dbStringArray[x] + "*";
+            }
+            request.setInput(inputString);
         }
 
-        return "CON Welocome to my USSD\n1.Buy Aitrtime\n2.Redeem Bonga";
+        Request request = em.find(Request.class, sessionId);
+        String[] stringArray = request.getInput().split("\\*");
+        int level = stringArray.length;
+        if (request.getInput().equals("")) {
+            output = "CON Welocome to my USSD\n1.Topup\n2.Redeem Bonga";
+        } else {
+            switch (level) {
+                case 1:
+                    switch (lastInput) {
+                        case "1":
+                             output = "CON \n1.Airtime\n2.MPESA";
+                            break;
+                        case "2":
+                           output= "CON \n10.For 10 minute\n20.For 20 minutes";
+                            break;
+                    }
+                    break;
+                case 2:
+                     output = "CON \n10.Ksh 100\n200. Ksh 200";                    
+                    break;
+                case 3:
+                    break;
+            }
+        }
+
+        return output;
     }
 
     @GET
